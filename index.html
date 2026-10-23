@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2b7de9">
+<title>Форматирование текста — тренажёр (3 класс)</title>
+<style>
+/* =====================================================
+   БАЗА
+   ===================================================== */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Segoe UI','Trebuchet MS',Tahoma,Verdana,sans-serif;
+  font-size:17px;line-height:1.4;color:#1b2b3a;
+  background:linear-gradient(160deg,#dff3ff 0%,#eaf7ff 30%,#f4ecff 60%,#fffbe6 100%);
+  background-attachment:fixed;min-height:100vh;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  padding:10px 10px 110px;overflow-x:hidden;
+}
+input,select{user-select:text;-webkit-user-select:text;}
+
+#app{max-width:540px;margin:0 auto;}
+
+.screen{display:none;animation:fade .3s ease;}
+.screen.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+.card{
+  background:#fff;border-radius:20px;padding:18px;
+  box-shadow:0 10px 30px rgba(43,125,233,.12);
+  border:2px solid #e8f1fb;margin-bottom:14px;
+}
+
+/* =====================================================
+   СТАРТ
+   ===================================================== */
+.start-card{text-align:center;margin-top:16px;padding:28px 20px 26px;}
+.logo{font-size:56px;line-height:1;margin-bottom:4px;filter:drop-shadow(0 6px 10px rgba(43,125,233,.25));}
+h1{font-size:26px;color:#1a4f8a;margin:4px 0;letter-spacing:.2px;}
+.subtitle{font-size:16px;color:#5b7083;margin:0 0 22px;font-weight:700;}
+.name-label{display:block;font-size:17px;font-weight:800;color:#1b2b3a;margin-bottom:10px;text-align:left;}
+#nameInput{
+  display:block;width:100%;padding:16px;font-family:inherit;
+  font-size:20px;font-weight:700;text-align:center;color:#14532d;
+  border:3px solid #2ecc71;background-color:#e8f8f5;border-radius:14px;
+  outline:none;margin-bottom:16px;transition:box-shadow .2s;
+}
+#nameInput:focus{box-shadow:0 0 0 5px rgba(46,204,113,.22);}
+.hint-small{font-size:15px;color:#5b7083;margin-top:18px;line-height:1.5;font-weight:600;}
+
+/* =====================================================
+   КНОПКИ
+   ===================================================== */
+.btn{
+  font-family:inherit;font-weight:800;border:none;border-radius:14px;
+  cursor:pointer;padding:16px 22px;font-size:18px;color:#fff;
+  letter-spacing:.2px;transition:transform .12s, filter .12s, box-shadow .12s;
+}
+.btn:active:not(:disabled){transform:scale(.97);}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3);}
+.btn-green{background:linear-gradient(180deg,#43e08c,#27ae60);box-shadow:0 5px 0 #1e8449;}
+.btn-green:active:not(:disabled){box-shadow:0 2px 0 #1e8449;}
+.btn-blue{background:linear-gradient(180deg,#5aa9f5,#2b7de9);box-shadow:0 5px 0 #1c5fb5;}
+.btn-blue:active:not(:disabled){box-shadow:0 2px 0 #1c5fb5;}
+.btn-purple{background:linear-gradient(180deg,#b07bee,#8e44ad);box-shadow:0 5px 0 #6c3483;}
+
+/* =====================================================
+   ВЕРХНЯЯ ПАНЕЛЬ
+   ===================================================== */
+.topbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;justify-content:space-between;}
+.topbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.counter{
+  font-size:14px;font-weight:800;color:#1a4f8a;
+  background:#fff;padding:6px 12px;border-radius:999px;
+  border:2px solid #d6e6f8;
+}
+.stage-badge{font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;color:#fff;background:#2b7de9;letter-spacing:.3px;}
+.student-chip{
+  background:#fff;border:2px solid #d6e6f8;border-radius:999px;
+  padding:6px 12px;font-size:13px;font-weight:800;color:#2b7de9;
+  max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.progress{height:12px;background:#fff;border-radius:999px;overflow:hidden;margin-bottom:12px;border:2px solid #e2eefb;}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#43e08c,#2b7de9);transition:width .4s ease;}
+
+/* =====================================================
+   ВОПРОС
+   ===================================================== */
+.q-text{font-size:21px;line-height:1.4;margin:0 0 14px;color:#12324f;font-weight:800;}
+
+/* Крупный показ иконки (для вопроса 4) */
+.show-icon-wrap{display:none;text-align:center;margin:6px 0 18px;}
+.show-icon-wrap.show{display:block;}
+.show-icon-big{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:128px;height:128px;
+  background:linear-gradient(180deg,#ffffff,#eaf4ff);
+  border:3px solid #a8cdf5;border-radius:22px;padding:18px;
+  box-shadow:0 6px 0 #cfe2f7, 0 10px 22px rgba(43,125,233,.18);
+}
+.show-icon-big svg{width:100%;height:100%;display:block;}
+
+/* =====================================================
+   ТЕКСТОВЫЕ ВАРИАНТЫ
+   ===================================================== */
+.options{display:flex;flex-direction:column;gap:10px;}
+.option{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  font-family:inherit;font-size:17px;font-weight:700;color:#1b2b3a;
+  background:#f8fbff;border:2.5px solid #d6e6f8;border-radius:14px;
+  padding:14px 16px;cursor:pointer;transition:all .12s;
+  min-height:62px;line-height:1.3;
+}
+.option:active:not(:disabled){transform:scale(.98);}
+.option.selected{border-color:#f39c12;background:#fff7e2;box-shadow:0 0 0 3px rgba(243,156,18,.2);}
+.opt-letter{
+  flex:0 0 40px;height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:10px;background:#2b7de9;color:#fff;font-size:18px;font-weight:900;
+}
+.option.selected .opt-letter{background:#f39c12;}
+
+/* =====================================================
+   ИКОНОЧНЫЕ ВАРИАНТЫ (2×2)
+   ===================================================== */
+.options-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+}
+.icon-opt{
+  aspect-ratio:1;min-height:110px;
+  background:linear-gradient(180deg,#f8fbff,#eaf4ff);
+  border:3px solid #a8cdf5;border-radius:18px;padding:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .12s;box-shadow:0 4px 0 #cfe2f7;
+}
+.icon-opt svg{width:100%;height:100%;max-width:100px;max-height:100px;display:block;}
+.icon-opt:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #cfe2f7;}
+.icon-opt.selected{
+  border-color:#f39c12;background:#fff7e2;
+  box-shadow:0 4px 0 #f0c060, 0 0 0 4px rgba(243,156,18,.25);
+}
+
+/* =====================================================
+   СООТВЕТСТВИЯ
+   ===================================================== */
+.selects{display:flex;flex-direction:column;gap:12px;}
+.match-row{
+  display:flex;align-items:center;gap:14px;
+  background:#f8fbff;border:2.5px solid #d6e6f8;
+  border-radius:14px;padding:12px 14px;
+}
+.match-icon{
+  flex:0 0 62px;width:62px;height:62px;
+  background:linear-gradient(180deg,#f8fbff,#eaf4ff);
+  border:2.5px solid #a8cdf5;border-radius:14px;
+  padding:7px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 0 #cfe2f7;
+}
+.match-icon svg{width:100%;height:100%;display:block;}
+.match-arrow{font-size:22px;color:#7cb8f5;font-weight:900;flex:0 0 auto;}
+.match-row select{
+  flex:1;min-width:0;
+  font-family:inherit;font-size:16px;font-weight:700;color:#1b2b3a;
+  padding:11px 32px 11px 12px;
+  border:2.5px solid #9fcbf7;border-radius:10px;background-color:#fff;
+  outline:none;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%232b7de9' stroke-width='2' fill='none'/></svg>");
+  background-repeat:no-repeat;background-position:right 10px center;cursor:pointer;
+}
+.match-row select:focus{border-color:#2b7de9;}
+.match-row select.sel-ok{border-color:#27ae60;background-color:#e9f9f0;}
+.match-row select.sel-bad{border-color:#e74c3c;background-color:#fdecea;}
+.match-row select:disabled{cursor:default;opacity:.95;}
+
+/* =====================================================
+   ПОДСКАЗКА И ФИДБЭК
+   ===================================================== */
+.hint-box{
+  display:none;margin-top:14px;padding:14px 16px;
+  background:#fffbe6;border:2.5px solid #f1c40f;border-radius:14px;
+  font-size:16px;font-weight:700;color:#7a5b00;line-height:1.45;
+}
+.hint-box.show{display:block;animation:fade .25s ease;}
+
+.feedback{display:none;margin-top:14px;padding:14px 16px;border-radius:14px;
+  font-size:17px;font-weight:700;line-height:1.4;}
+.feedback.ok{display:block;background:#e9f9f0;border:2.5px solid #27ae60;color:#186a3b;}
+.feedback.bad{display:block;background:#fdecea;border:2.5px solid #e74c3c;color:#922b21;}
+.fb-correct{font-size:15px;margin-top:6px;opacity:.92;line-height:1.4;}
+
+/* =====================================================
+   НИЖНЯЯ ПАНЕЛЬ
+   ===================================================== */
+.bottom-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:560px;padding:12px 14px 16px;
+  background:#fff;box-shadow:0 -6px 24px rgba(0,0,0,.1);
+  display:none;gap:10px;z-index:50;
+  border-top-left-radius:20px;border-top-right-radius:20px;
+}
+.bottom-bar.active{display:flex;}
+#hintBtn{
+  flex:0 0 66px;font-size:28px;line-height:1;padding:12px;
+  background:linear-gradient(180deg,#ffd85e,#f1c40f);color:#6b4b00;
+  box-shadow:0 4px 0 #c39c00;border-radius:14px;border:none;cursor:pointer;
+  transition:transform .12s, box-shadow .12s;
+}
+#hintBtn:active{transform:translateY(2px);box-shadow:0 2px 0 #c39c00;}
+#actionBtn{flex:1;}
+
+/* =====================================================
+   ИТОГИ
+   ===================================================== */
+.result-head{text-align:center;margin-bottom:18px;}
+.result-head h1{font-size:24px;color:#1a4f8a;margin:0 0 8px;}
+.res-name{font-size:22px;font-weight:900;color:#8e44ad;margin:8px 0;}
+.res-score{
+  display:inline-block;font-size:26px;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,#43e08c,#27ae60);
+  padding:12px 26px;border-radius:18px;
+  box-shadow:0 8px 20px rgba(39,174,96,.32);margin:6px 0;
+}
+.res-count{font-size:18px;font-weight:800;color:#2b7de9;margin:6px 0;}
+.res-level{font-size:22px;font-weight:900;color:#e67e22;margin:8px 0 4px;letter-spacing:.2px;}
+.res-msg{font-size:16px;color:#5b7083;font-weight:600;line-height:1.45;margin:0;}
+.table-wrap{max-height:40vh;overflow-y:auto;border-radius:12px;border:2px solid #e2eefb;margin-top:12px;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+thead th{position:sticky;top:0;background:#2b7de9;color:#fff;font-size:13px;padding:10px 8px;text-align:left;z-index:2;}
+tbody td{padding:9px 8px;border-bottom:1.5px solid #eef4fb;vertical-align:top;line-height:1.35;}
+tbody tr:nth-child(even){background:#fafdff;}
+tr.tr-ok td:first-child{border-left:5px solid #27ae60;}
+tr.tr-bad td:first-child{border-left:5px solid #e74c3c;}
+td.td-num{font-weight:800;color:#1a4f8a;width:34px;}
+td.td-status{font-weight:800;white-space:nowrap;width:92px;font-size:13px;}
+tr.tr-ok td.td-status{color:#1e8449;}
+tr.tr-bad td.td-status{color:#c0392b;}
+td.td-correct{color:#42586d;font-weight:600;}
+.result-actions{text-align:center;margin-top:18px;}
+
+/* =====================================================
+   МЕЛКИЕ ЭКРАНЫ
+   ===================================================== */
+@media (max-width:360px){
+  body{font-size:16px;padding:8px 8px 106px;}
+  .card{padding:14px;}
+  .q-text{font-size:19px;}
+  .option{font-size:16px;padding:12px 14px;min-height:58px;}
+  .opt-letter{flex:0 0 36px;height:36px;font-size:17px;}
+  h1{font-size:22px;}
+  .logo{font-size:48px;}
+  .res-score{font-size:22px;}
+  .res-name{font-size:19px;}
+  .icon-opt{min-height:96px;padding:12px;}
+  .show-icon-big{width:110px;height:110px;padding:14px;}
+  .match-icon{flex:0 0 52px;width:52px;height:52px;padding:6px;}
+}
+</style>
+</head>
+<body oncontextmenu="return false;" oncopy="return false;" oncut="return false;">
+
+<div id="app">
+
+  <!-- ========== СТАРТ ========== -->
+  <section id="startScreen" class="screen active">
+    <div class="card start-card">
+      <div class="logo">🖥️📄</div>
+      <h1>Форматирование текста</h1>
+      <p class="subtitle">Тренажёр для 3 класса · 10 простых заданий</p>
+      <label class="name-label" for="nameInput">✏️ Введи своё имя и фамилию:</label>
+      <input id="nameInput" type="text" autocomplete="off" spellcheck="false">
+      <button id="startBtn" class="btn btn-green" disabled>🚀 Начать работу</button>
+      <p class="hint-small">💡 Работай спокойно, без спешки.<br>На каждом задании есть кнопка «Подсказка».</p>
+    </div>
+  </section>
+
+  <!-- ========== ВОПРОСЫ ========== -->
+  <section id="quizScreen" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="stage-badge" id="stageBadge">Задание</span>
+        <span class="counter" id="qCounter">1 / 10</span>
+      </div>
+      <div class="student-chip" id="studentName">Ученик</div>
+    </div>
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+    <main class="card">
+      <h2 id="qText" class="q-text"></h2>
+      <div id="showIconWrap" class="show-icon-wrap"></div>
+      <div id="answerArea"></div>
+      <div id="feedback" class="feedback"></div>
+      <div id="hintBox" class="hint-box"></div>
+    </main>
+  </section>
+
+  <!-- ========== ИТОГИ ========== -->
+  <section id="resultScreen" class="screen">
+    <div class="card">
+      <div class="result-head">
+        <h1>🏁 Результаты</h1>
+        <div class="res-name" id="resName">—</div>
+        <div class="res-score" id="resScore">0 из 10</div>
+        <div class="res-count" id="resCount">0 из 10 заданий</div>
+        <div class="res-level" id="resLevel">—</div>
+        <p class="res-msg" id="resMsg">—</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>№</th><th>Статус</th><th>Правильный ответ</th></tr></thead>
+          <tbody id="resTableBody"></tbody>
+        </table>
+      </div>
+      <div class="result-actions">
+        <button id="restartBtn" class="btn btn-purple" type="button">🔄 Пройти заново</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="bottomBar" class="bottom-bar">
+  <button id="hintBtn" type="button" aria-label="Подсказка">💡</button>
+  <button id="actionBtn" class="btn btn-blue" type="button">Проверить</button>
+</div>
+
+<script>
+/* =====================================================
+   1. ЗАЩИТА
+   ===================================================== */
+document.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; });
+document.addEventListener('selectstart', function(e){
+  var t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return true;
+  e.preventDefault(); return false;
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'F12'){ e.preventDefault(); return false; }
+  if (e.key === 'PrintScreen' || e.key === 'Snapshot'){
+    e.preventDefault();
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText('').catch(function(){});
+    }
+    return false;
+  }
+  if (e.ctrlKey || e.metaKey){
+    var k = (e.key || '').toLowerCase();
+    if (['c','a','u','s','p','x','v','j'].indexOf(k) !== -1){
+      e.preventDefault(); return false;
+    }
+  }
+});
+
+/* =====================================================
+   2. УТИЛИТЫ
+   ===================================================== */
+function shuffle(arr){
+  for (var i = arr.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function $(id){ return document.getElementById(id); }
+
+/* =====================================================
+   3. РЕАЛЬНЫЕ ИКОНКИ ПАНЕЛИ ИНСТРУМЕНТОВ (SVG)
+   ===================================================== */
+var ICONS = {
+
+  /* Ж — жирный */
+  bold:
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<text x="32" y="48" font-size="48" font-weight="900" text-anchor="middle" ' +
+        'fill="#1c5fb5" font-family="Arial,Helvetica,sans-serif">Ж</text>' +
+    '</svg>',
+
+  /* К — курсив (наклон через skewX) */
+  italic:
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<g transform="translate(32,48) skewX(-12)">' +
+        '<text x="0" y="0" font-size="48" font-weight="700" text-anchor="middle" ' +
+          'fill="#1c5fb5" font-family="Arial,Helvetica,sans-serif">К</text>' +
+      '</g>' +
+    '</svg>',
+
+  /* Ч — подчёркнутый */
+  underline:
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<text x="32" y="42" font-size="44" font-weight="700" text-anchor="middle" ' +
+        'fill="#1c5fb5" font-family="Arial,Helvetica,sans-serif">Ч</text>' +
+      '<line x1="14" y1="53" x2="50" y2="53" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>',
+
+  /* А с цветной полосой — цвет текста */
+  color:
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<text x="32" y="44" font-size="44" font-weight="700" text-anchor="middle" ' +
+        'fill="#1c5fb5" font-family="Arial,Helvetica,sans-serif">А</text>' +
+      '<rect x="14" y="50" width="36" height="9" rx="2" fill="#e74c3c"/>' +
+    '</svg>',
+
+  /* Выравнивание по левому краю */
+  alignLeft:
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<line x1="10" y1="18" x2="46" y2="18" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="29" x2="54" y2="29" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="40" x2="40" y2="40" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="51" x2="54" y2="51" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>',
+
+  /* По центру */
+  alignCenter:
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<line x1="17" y1="18" x2="47" y2="18" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="29" x2="54" y2="29" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="21" y1="40" x2="43" y2="40" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="51" x2="54" y2="51" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>',
+
+  /* По правому краю */
+  alignRight:
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<line x1="18" y1="18" x2="54" y2="18" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="29" x2="54" y2="29" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="24" y1="40" x2="54" y2="40" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="51" x2="54" y2="51" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>',
+
+  /* По ширине */
+  alignJustify:
+    '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<line x1="10" y1="18" x2="54" y2="18" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="29" x2="54" y2="29" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="40" x2="54" y2="40" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="10" y1="51" x2="54" y2="51" stroke="#1c5fb5" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>'
+};
+
+/* =====================================================
+   4. БАНК ИЗ 10 ЗАДАНИЙ
+   ===================================================== */
+var QUESTIONS = [
+
+  /* 1 */
+  {
+    n:1,
+    text:'Какая кнопка делает буквы <b>жирными</b>?',
+    type:'choice',
+    options:['bold','italic','underline','color'],
+    answer:'bold',
+    hint:'Жирные буквы — толстые и заметные. Их обозначает кнопка «Ж».'
+  },
+
+  /* 2 */
+  {
+    n:2,
+    text:'Какая кнопка делает буквы <i>наклонными</i> (курсивом)?',
+    type:'choice',
+    options:['bold','italic','underline','color'],
+    answer:'italic',
+    hint:'Наклонные буквы называют курсивом. Его обозначает кнопка «К».'
+  },
+
+  /* 3 */
+  {
+    n:3,
+    text:'Какая кнопка <u>подчёркивает</u> текст?',
+    type:'choice',
+    options:['bold','italic','underline','color'],
+    answer:'underline',
+    hint:'Подчёркнутый текст обозначает кнопка «Ч» — от слова «чёрточка».'
+  },
+
+  /* 4 */
+  {
+    n:4,
+    text:'Что делает эта кнопка на панели инструментов?',
+    showIcon:'color',
+    type:'choice',
+    options:[
+      'Изменяет цвет текста',
+      'Делает текст жирным',
+      'Увеличивает размер букв',
+      'Выравнивает по центру'
+    ],
+    answer:'Изменяет цвет текста',
+    hint:'Под буквой «А» нарисована цветная полоса — она открывает палитру цветов.'
+  },
+
+  /* 5 */
+  {
+    n:5,
+    text:'Что нужно сделать с текстом <b>перед</b> изменением его вида?',
+    type:'choice',
+    options:[
+      'Выделить текст',
+      'Напечатать заново',
+      'Удалить текст',
+      'Сохранить файл'
+    ],
+    answer:'Выделить текст',
+    hint:'Сначала текст выделяют мышкой, а потом нажимают кнопку форматирования.'
+  },
+
+  /* 6 */
+  {
+    n:6,
+    text:'Верно ли, что кнопка «Ж» делает текст жирным?',
+    type:'truefalse',
+    options:['Верно','Неверно'],
+    answer:'Верно',
+    hint:'Да, «Ж» — это жирное начертание. Буквы становятся толще.'
+  },
+
+  /* 7 */
+  {
+    n:7,
+    text:'Какое выравнивание поставит текст ровно <b>посередине</b> строки?',
+    type:'choice',
+    options:['alignLeft','alignCenter','alignRight','alignJustify'],
+    answer:'alignCenter',
+    hint:'Кнопка «По центру» ставит каждую строку ровно посередине страницы.'
+  },
+
+  /* 8 */
+  {
+    n:8,
+    text:'В размере шрифта написано <b>18 pt</b>. Что это значит?',
+    type:'choice',
+    options:[
+      'Размер букв (чем больше число — тем крупнее)',
+      'Цвет букв',
+      'Название шрифта',
+      'Количество слов в тексте'
+    ],
+    answer:'Размер букв (чем больше число — тем крупнее)',
+    hint:'Число рядом с «pt» — это размер (кегль). Чем больше число, тем крупнее буквы.'
+  },
+
+  /* 9 */
+  {
+    n:9,
+    text:'Соотнеси кнопку и её действие:',
+    type:'selects',
+    items:[
+      { labelIcon:'bold',      correct:'Жирный',        options:['Жирный','Курсив','Подчёркнутый'] },
+      { labelIcon:'italic',    correct:'Курсив',        options:['Жирный','Курсив','Подчёркнутый'] },
+      { labelIcon:'underline', correct:'Подчёркнутый',  options:['Жирный','Курсив','Подчёркнутый'] }
+    ],
+    hint:'Ж — жирный, К — курсив, Ч — подчёркнутый.'
+  },
+
+  /* 10 */
+  {
+    n:10,
+    text:'Как правильно оформить <b>заголовок</b> проекта?',
+    type:'choice',
+    options:[
+      'Крупно и по центру',
+      'Мелко и в углу',
+      'Жёлтым цветом на белом фоне',
+      'Каждое слово — разным шрифтом'
+    ],
+    answer:'Крупно и по центру',
+    hint:'Заголовок делают крупным (18–20 pt) и ставят по центру — так его сразу видно.'
+  }
+
+];
+
+/* =====================================================
+   5. СОСТОЯНИЕ
+   ===================================================== */
+var state = { name:'', idx:0, results:[] };
+var phase = 'answer';
+var locked = false;
+var currentSelected = null;
+
+/* =====================================================
+   6. DOM
+   ===================================================== */
+var startScreen   = $('startScreen');
+var quizScreen    = $('quizScreen');
+var resultScreen  = $('resultScreen');
+var bottomBar     = $('bottomBar');
+var nameInput     = $('nameInput');
+var startBtn      = $('startBtn');
+var stageBadge    = $('stageBadge');
+var qCounter      = $('qCounter');
+var progressFill  = $('progressFill');
+var studentNameEl = $('studentName');
+var qTextEl       = $('qText');
+var showIconWrap  = $('showIconWrap');
+var answerArea    = $('answerArea');
+var feedbackEl    = $('feedback');
+var hintBox       = $('hintBox');
+var hintBtn       = $('hintBtn');
+var actionBtn     = $('actionBtn');
+var restartBtn    = $('restartBtn');
+
+/* =====================================================
+   7. ЭКРАНЫ
+   ===================================================== */
+function showScreen(id){
+  var all = document.querySelectorAll('.screen');
+  for (var i = 0; i < all.length; i++) all[i].classList.remove('active');
+  $(id).classList.add('active');
+  bottomBar.classList.toggle('active', id === 'quizScreen');
+  window.scrollTo(0, 0);
+}
+
+/* =====================================================
+   8. СТАРТ
+   ===================================================== */
+nameInput.addEventListener('input', function(){
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !startBtn.disabled) startBtn.click();
+});
+startBtn.addEventListener('click', function(){
+  var nm = nameInput.value.trim();
+  if (!nm) return;
+  state.name = nm;
+  state.idx = 0;
+  state.results = [];
+  studentNameEl.textContent = '👤 ' + nm;
+  showScreen('quizScreen');
+  renderQuestion();
+});
+
+/* =====================================================
+   9. РЕНДЕР ВОПРОСА
+   ===================================================== */
+function renderQuestion(){
+  var q = QUESTIONS[state.idx];
+  locked = false;
+  phase = 'answer';
+  currentSelected = null;
+
+  qCounter.textContent = (state.idx + 1) + ' / ' + QUESTIONS.length;
+  stageBadge.textContent = 'Задание ' + (state.idx + 1);
+  progressFill.style.width = (state.idx / QUESTIONS.length * 100) + '%';
+
+  qTextEl.innerHTML = q.text;
+
+  /* Крупная иконка вопроса (для q4) */
+  if (q.showIcon && ICONS[q.showIcon]){
+    showIconWrap.innerHTML = '<div class="show-icon-big">' + ICONS[q.showIcon] + '</div>';
+    showIconWrap.classList.add('show');
+  } else {
+    showIconWrap.innerHTML = '';
+    showIconWrap.classList.remove('show');
+  }
+
+  answerArea.innerHTML = '';
+  feedbackEl.style.display = 'none';
+  feedbackEl.className = 'feedback';
+  feedbackEl.innerHTML = '';
+  hintBox.classList.remove('show');
+  hintBox.innerHTML = '💡 ' + q.hint;
+
+  actionBtn.textContent = 'Проверить';
+  actionBtn.disabled = false;
+  actionBtn.className = 'btn btn-blue';
+
+  if (q.type === 'choice' || q.type === 'truefalse'){
+    renderChoice(q);
+  } else if (q.type === 'selects'){
+    renderSelects(q);
+  }
+}
+
+/* ---------- вариант с иконками или текстом ---------- */
+function renderChoice(q){
+  var opts = shuffle(q.options.slice());
+  var allIcons = opts.every(function(o){ return ICONS[o]; });
+
+  if (allIcons){
+    renderIconGrid(opts);
+  } else {
+    renderTextOptions(opts);
+  }
+}
+
+function renderIconGrid(opts){
+  var grid = document.createElement('div');
+  grid.className = 'options-grid';
+
+  opts.forEach(function(o){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'icon-opt';
+    btn.dataset.value = o;
+    btn.innerHTML = ICONS[o];
+    btn.addEventListener('click', function(){
+      if (locked) return;
+      var all = grid.querySelectorAll('.icon-opt');
+      for (var k = 0; k < all.length; k++) all[k].classList.remove('selected');
+      btn.classList.add('selected');
+      currentSelected = o;
+    });
+    grid.appendChild(btn);
+  });
+
+  answerArea.appendChild(grid);
+}
+
+function renderTextOptions(opts){
+  var wrap = document.createElement('div');
+  wrap.className = 'options';
+
+  opts.forEach(function(o, i){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'option';
+    b.dataset.value = o;
+    b.innerHTML = '<span class="opt-letter">' + String.fromCharCode(65 + i) + '</span>' +
+                  '<span class="opt-text">' + escapeHtml(o) + '</span>';
+    b.addEventListener('click', function(){
+      if (locked) return;
+      var all = wrap.querySelectorAll('.option');
+      for (var k = 0; k < all.length; k++) all[k].classList.remove('selected');
+      b.classList.add('selected');
+      currentSelected = o;
+    });
+    wrap.appendChild(b);
+  });
+
+  answerArea.appendChild(wrap);
+}
+
+/* ---------- соответствия с иконками ---------- */
+function renderSelects(q){
+  var wrap = document.createElement('div');
+  wrap.className = 'selects';
+
+  q.items.forEach(function(item){
+    var row = document.createElement('div');
+    row.className = 'match-row';
+
+    var ico = document.createElement('span');
+    ico.className = 'match-icon';
+    ico.innerHTML = ICONS[item.labelIcon] || '';
+
+    var arrow = document.createElement('span');
+    arrow.className = 'match-arrow';
+    arrow.textContent = '→';
+
+    var opts = shuffle(item.options.slice());
+    var sel = document.createElement('select');
+    sel.className = 'match-select';
+    sel.dataset.correct = item.correct;
+
+    var html = '<option value="">— выбери —</option>';
+    opts.forEach(function(o){
+      html += '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>';
+    });
+    sel.innerHTML = html;
+
+    row.appendChild(ico);
+    row.appendChild(arrow);
+    row.appendChild(sel);
+    wrap.appendChild(row);
+  });
+
+  answerArea.appendChild(wrap);
+}
+
+/* =====================================================
+   10. ПРОВЕРКА
+   ===================================================== */
+function evaluate(){
+  var q = QUESTIONS[state.idx];
+
+  if (q.type === 'choice' || q.type === 'truefalse'){
+    return {
+      correct: currentSelected === q.answer,
+      correctText: iconLabel(q.answer),
+      given: currentSelected || '—'
+    };
+  }
+
+  if (q.type === 'selects'){
+    var sels = answerArea.querySelectorAll('select');
+    var ok = true;
+    var corrArr = [];
+    for (var i = 0; i < sels.length; i++){
+      var s = sels[i];
+      corrArr.push(s.dataset.correct);
+      if (s.value === s.dataset.correct){
+        s.classList.add('sel-ok');
+      } else {
+        s.classList.add('sel-bad');
+        ok = false;
+      }
+      s.disabled = true;
+    }
+    return { correct: ok, correctText: corrArr.join('; ') };
+  }
+
+  return { correct:false, correctText:'—' };
+}
+
+/* Перевод ключа-иконки в текст правильного ответа */
+function iconLabel(v){
+  var map = {
+    bold:'Жирный (Ж)',
+    italic:'Курсив (К)',
+    underline:'Подчёркнутый (Ч)',
+    color:'Цвет текста (А)',
+    alignLeft:'По левому краю',
+    alignCenter:'По центру',
+    alignRight:'По правому краю',
+    alignJustify:'По ширине'
+  };
+  return map[v] || v;
+}
+
+/* =====================================================
+   11. КНОПКА ДЕЙСТВИЯ
+   ===================================================== */
+actionBtn.addEventListener('click', function(){
+  if (phase === 'answer'){
+    var q = QUESTIONS[state.idx];
+    var res = evaluate();
+
+    state.results.push({
+      n: q.n,
+      correct: res.correct,
+      correctText: res.correctText
+    });
+
+    showFeedback(res);
+    locked = true;
+
+    if (state.idx === QUESTIONS.length - 1){
+      actionBtn.textContent = '🏁 Результаты';
+      actionBtn.className = 'btn btn-green';
+    } else {
+      actionBtn.textContent = 'Далее →';
+      actionBtn.className = 'btn btn-green';
+    }
+    phase = 'next';
+  } else {
+    state.idx++;
+    if (state.idx >= QUESTIONS.length){
+      progressFill.style.width = '100%';
+      showResults();
+      return;
+    }
+    renderQuestion();
+  }
+});
+
+function showFeedback(res){
+  feedbackEl.style.display = 'block';
+  feedbackEl.className = 'feedback ' + (res.correct ? 'ok' : 'bad');
+  if (res.correct){
+    feedbackEl.innerHTML = '✅ <b>Верно! Молодец!</b>';
+  } else {
+    feedbackEl.innerHTML = '❌ <b>Не совсем.</b>' +
+      '<div class="fb-correct">Правильный ответ: ' + escapeHtml(res.correctText) + '</div>';
+  }
+}
+
+hintBtn.addEventListener('click', function(){
+  var wasOpen = hintBox.classList.contains('show');
+  hintBox.classList.toggle('show');
+  if (!wasOpen){
+    setTimeout(function(){
+      hintBox.scrollIntoView({ behavior:'smooth', block:'center' });
+    }, 60);
+  }
+});
+
+/* =====================================================
+   12. ИТОГИ
+   ===================================================== */
+function levelInfo(score){
+  if (score <= 5) return { title:'«Старайся!» 💪',
+    msg:'Повтори кнопки форматирования: «Ж», «К», «Ч», цвет и выравнивание. Попробуй ещё раз — у тебя получится!' };
+  if (score <= 7) return { title:'«Хорошо!» 👍',
+    msg:'Ты знаешь основные инструменты. Повтори подсказки и попробуй улучшить результат!' };
+  if (score <= 9) return { title:'«Отлично!» 🌟',
+    msg:'Вы отлично владеете навыками форматирования текста в текстовом процессоре!' };
+  return { title:'«Супер-эксперт!» 🏆',
+    msg:'Вы супер-эксперт по форматированию текста! Так держать!' };
+}
+
+function showResults(){
+  var total = QUESTIONS.length;
+  var correctCount = 0;
+  for (var i = 0; i < state.results.length; i++){
+    if (state.results[i].correct) correctCount++;
+  }
+  var score = correctCount;
+  var lvl = levelInfo(score);
+
+  $('resName').textContent = state.name;
+  $('resScore').textContent = score + ' из 10';
+  $('resCount').textContent = correctCount + ' из ' + total + ' заданий';
+  $('resLevel').textContent = 'Уровень: ' + lvl.title;
+  $('resMsg').textContent = lvl.msg;
+
+  var tbody = $('resTableBody');
+  var rows = '';
+  for (var j = 0; j < state.results.length; j++){
+    var r = state.results[j];
+    rows += '<tr class="' + (r.correct ? 'tr-ok' : 'tr-bad') + '">' +
+              '<td class="td-num">' + r.n + '</td>' +
+              '<td class="td-status">' + (r.correct ? '✅ Верно' : '❌ Ошибка') + '</td>' +
+              '<td class="td-correct">' + escapeHtml(r.correctText) + '</td>' +
+            '</tr>';
+  }
+  tbody.innerHTML = rows;
+
+  showScreen('resultScreen');
+}
+
+restartBtn.addEventListener('click', function(){
+  state.idx = 0;
+  state.results = [];
+  progressFill.style.width = '0%';
+  showScreen('quizScreen');
+  renderQuestion();
+});
+</script>
+</body>
+</html>
